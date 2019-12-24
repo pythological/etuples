@@ -13,7 +13,7 @@ setup(
     maintainer="Brandon T. Willard",
     maintainer_email="brandonwillard+etuples@gmail.com",
     packages=["etuples"],
-    install_requires=["toolz", "multipledispatch",],
+    install_requires=["toolz", "cons", "multipledispatch",],
     long_description=open("README.md").read() if exists("README.md") else "",
     long_description_content_type="text/markdown",
     python_requires=">=3.6",

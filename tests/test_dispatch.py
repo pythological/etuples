@@ -1,0 +1,93 @@
+from pytest import raises
+
+from operator import add
+from collections.abc import Sequence
+
+from etuples.core import ExpressionTuple, etuple
+from etuples.dispatch import apply, rator, rands, etuplize
+
+
+class Node:
+    __slots__ = ("rator", "rands")
+
+    def __init__(self, rator, rands):
+        self.rator, self.rands = rator, rands
+
+    def __eq__(self, other):
+        return (
+            type(self) == type(other)
+            and self.rator == other.rator
+            and self.rands == other.rands
+        )
+
+
+class Operator:
+    def __init__(self, op_name):
+        self.op_name = op_name
+
+    def __call__(self, *args):
+        pass
+
+
+rands.add((Node,), lambda x: x.rands)
+rator.add((Node,), lambda x: x.rator)
+
+
+@apply.register(Operator, (Sequence, ExpressionTuple))
+def apply_Operator(rator, rands):
+    return Node(rator, rands)
+
+
+def test_etuple_apply():
+    """Test `etuplize` and `etuple` interactions with `apply`."""
+
+    assert apply(add, (1, 2)) == 3
+    assert apply(1, (2,)) == (1, 2)
+
+    # Make sure that we don't lose underlying `eval_obj`s
+    # when taking apart and re-creating expression tuples
+    # using `kanren`'s `operator`, `arguments` and `term`
+    # functions.
+    e1 = etuple(add, (object(),), (object(),))
+    e1_obj = e1.eval_obj
+
+    e1_dup = (rator(e1),) + rands(e1)
+
+    assert isinstance(e1_dup, ExpressionTuple)
+    assert e1_dup.eval_obj == e1_obj
+
+    e1_dup_2 = apply(rator(e1), rands(e1))
+    assert e1_dup_2 == e1_obj
+
+
+def test_rator_rands_apply():
+    op = Operator("*")
+    node = Node(op, [1, 2])
+    node_rtr = rator(node)
+    node_rnd = rands(node)
+
+    assert node_rtr == op
+    assert node_rnd == [1, 2]
+    assert apply(node_rtr, node_rnd) == node
+
+
+def test_etuplize():
+
+    e0 = etuple(add, 1)
+    e1 = etuplize(e0)
+
+    assert e0 is e1
+
+    assert etuple(1, 2) == etuplize((1, 2))
+
+    with raises(TypeError):
+        etuplize("ab")
+
+    assert "ab" == etuplize("ab", return_bad_args=True)
+
+    op_1, op_2 = Operator("*"), Operator("+")
+    node_1 = Node(op_2, [1, 2])
+    node_2 = Node(op_1, [node_1, 3])
+
+    assert etuplize(node_2) == etuple(op_1, etuple(op_2, 1, 2), 3)
+    assert etuplize(node_2, shallow=True) == etuple(op_1, node_1, 3)
