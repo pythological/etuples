@@ -1,4 +1,4 @@
-from pytest import raises
+from pytest import raises, importorskip
 
 from operator import add
 from collections.abc import Sequence
@@ -91,3 +91,21 @@ def test_etuplize():
 
     assert etuplize(node_2) == etuple(op_1, etuple(op_2, 1, 2), 3)
     assert etuplize(node_2, shallow=True) == etuple(op_1, node_1, 3)
+
+
+def test_unification():
+    from cons import cons
+
+    uni = importorskip("unification")
+
+    var, unify, reify = uni.var, uni.unify, uni.reify
+
+    a_lv, b_lv = var(), var()
+    assert unify(etuple(add, 1, 2), etuple(add, 1, 2), {}) == {}
+    assert unify(etuple(add, 1, 2), etuple(a_lv, 1, 2), {}) == {a_lv: add}
+    assert reify(etuple(a_lv, 1, 2), {a_lv: add}) == etuple(add, 1, 2)
+
+    res = unify(etuple(add, 1, 2), cons(a_lv, b_lv), {})
+    assert res == {a_lv: add, b_lv: etuple(1, 2)}
+
+    assert reify(cons(a_lv, b_lv), res) == etuple(add, 1, 2)
