@@ -1,10 +1,26 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Sequence, Mapping
 
 from multipledispatch import dispatch
 
 from cons.core import ConsError, ConsNull, ConsPair, car, cdr, cons
 
 from .core import etuple, ExpressionTuple
+
+try:
+    from unification.core import _reify, _unify
+except ModuleNotFoundError:
+    pass
+else:
+
+    def _unify_ExpressionTuple(u, v, s):
+        return _unify(u._tuple, v._tuple, s)
+
+    _unify.add((ExpressionTuple, ExpressionTuple, Mapping), _unify_ExpressionTuple)
+
+    def _reify_ExpressionTuple(u, s):
+        return etuple(*_reify(u._tuple, s))
+
+    _reify.add((ExpressionTuple, Mapping), _reify_ExpressionTuple)
 
 
 @dispatch(object)
