@@ -119,7 +119,7 @@ e(+, e(*, 1, 2), 3)
 True
 ```
 
-`etuplize` can also do shallow to object-to-`etuple` conversions:
+`etuplize` can also do shallow object-to-`etuple` conversions:
 ```python
 >>> et = etuplize(add_node, shallow=True)
 >>> pprint(et)
