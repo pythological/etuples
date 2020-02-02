@@ -75,7 +75,7 @@ operator, arguments, term = rator, rands, apply
 
 
 @dispatch(object)
-def etuplize(x, shallow=False, return_bad_args=False):
+def etuplize(x, shallow=False, return_bad_args=False, convert_ConsPairs=True):
     """Return an expression-tuple for an object (i.e. a tuple of rand and rators).
 
     When evaluated, the rand and rators should [re-]construct the object.  When
@@ -95,7 +95,7 @@ def etuplize(x, shallow=False, return_bad_args=False):
     """
     if isinstance(x, ExpressionTuple):
         return x
-    elif x is not None and isinstance(x, (ConsNull, ConsPair)):
+    elif convert_ConsPairs and x is not None and isinstance(x, (ConsNull, ConsPair)):
         return etuple(*x)
 
     try:
@@ -114,7 +114,9 @@ def etuplize(x, shallow=False, return_bad_args=False):
         et_args = args
     else:
         et_op = etuplize(op, return_bad_args=True)
-        et_args = tuple(etuplize(a, return_bad_args=True) for a in args)
+        et_args = tuple(
+            etuplize(a, return_bad_args=True, convert_ConsPairs=False) for a in args
+        )
 
     res = etuple(et_op, *et_args, eval_obj=x)
     return res
