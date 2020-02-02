@@ -87,10 +87,11 @@ def test_etuplize():
 
     op_1, op_2 = Operator("*"), Operator("+")
     node_1 = Node(op_2, [1, 2])
-    node_2 = Node(op_1, [node_1, 3])
+    node_2 = Node(op_1, [node_1, 3, ()])
 
-    assert etuplize(node_2) == etuple(op_1, etuple(op_2, 1, 2), 3)
-    assert etuplize(node_2, shallow=True) == etuple(op_1, node_1, 3)
+    assert etuplize(node_2) == etuple(op_1, etuple(op_2, 1, 2), 3, ())
+    assert type(etuplize(node_2)[-1]) == tuple
+    assert etuplize(node_2, shallow=True) == etuple(op_1, node_1, 3, ())
 
 
 def test_unification():
