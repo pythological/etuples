@@ -2,7 +2,7 @@ import pytest
 
 from operator import add
 
-from etuples.core import ExpressionTuple, etuple, KwdPair
+from etuples.core import ExpressionTuple, etuple, KwdPair, InvalidExpression
 
 
 def test_ExpressionTuple(capsys):
@@ -40,6 +40,16 @@ def test_ExpressionTuple(capsys):
     ExpressionTuple((print, "hi")).eval_obj
     captured = capsys.readouterr()
     assert captured.out == "hi\n"
+
+    e3 = ExpressionTuple(())
+
+    with pytest.raises(InvalidExpression):
+        e3.eval_obj
+
+    e4 = ExpressionTuple((1,))
+
+    with pytest.raises(InvalidExpression):
+        e4.eval_obj
 
 
 def test_etuple():

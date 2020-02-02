@@ -11,6 +11,16 @@ etuple_repr.maxstring = 100
 etuple_repr.maxother = 100
 
 
+class InvalidExpression(Exception):
+    """An exception indicating that an `ExpressionTuple` is not a valid [S-]expression.
+
+    This exception is raised when an attempt is made to evaluate an
+    `ExpressionTuple` that does not have a valid operator (e.g. not a
+    `callable`).
+
+    """
+
+
 class KwdPair(object):
     """A class used to indicate a keyword + value mapping.
 
@@ -107,16 +117,22 @@ class ExpressionTuple(Sequence):
         recursively.
 
         """
+        if len(self._tuple) == 0:
+            raise InvalidExpression()
+
         if self._eval_obj is not self.null:
             return self._eval_obj
         else:
+            op = self._tuple[0]
+            op = getattr(op, "eval_obj", op)
+
+            if not callable(op):
+                raise InvalidExpression()
+
             evaled_args = [getattr(i, "eval_obj", i) for i in self._tuple[1:]]
             arg_grps = toolz.groupby(lambda x: isinstance(x, KwdPair), evaled_args)
             evaled_args = arg_grps.get(False, [])
             evaled_kwargs = arg_grps.get(True, [])
-
-            op = self._tuple[0]
-            op = getattr(op, "eval_obj", op)
 
             try:
                 op_sig = inspect.signature(op)
