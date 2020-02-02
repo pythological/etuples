@@ -108,4 +108,45 @@ def test_unification():
     res = unify(etuple(add, 1, 2), cons(a_lv, b_lv), {})
     assert res == {a_lv: add, b_lv: etuple(1, 2)}
 
-    assert reify(cons(a_lv, b_lv), res) == etuple(add, 1, 2)
+    res = reify(cons(a_lv, b_lv), res)
+    assert isinstance(res, ExpressionTuple)
+    assert res == etuple(add, 1, 2)
+
+    et = etuple(a_lv,)
+    res = reify(et, {a_lv: 1})
+    assert isinstance(res, ExpressionTuple)
+
+    et = etuple(a_lv,)
+    # We choose to allow unification with regular tuples.
+    if etuple(1) == (1,):
+        res = unify(et, (1,))
+        assert res == {a_lv: 1}
+
+    et = etuple(add, 1, 2)
+    assert et.eval_obj == 3
+
+    res = unify(et, cons(a_lv, b_lv))
+    assert res == {a_lv: add, b_lv: et[1:]}
+
+    # Make sure we've preserved the original object after deconstruction via
+    # `unify`
+    assert res[b_lv]._parent is et
+    assert ((res[a_lv],) + res[b_lv])._eval_obj == 3
+
+    # Make sure we've preserved the original object after reconstruction via
+    # `reify`
+    rf_res = reify(cons(a_lv, b_lv), res)
+    assert rf_res is et
+
+    et_lv = etuple(add, a_lv, 2)
+    assert reify(et_lv[1:], {})._parent is et_lv
+
+    # Reify a logic variable to another logic variable
+    assert reify(et_lv[1:], {a_lv: b_lv})._parent is et_lv
+
+    # TODO: We could propagate the parent etuple when a sub-etuple is `cons`ed
+    # with logic variables.
+    # et_1 = et[2:]
+    # et_2 = cons(b_lv, et_1)
+    # assert et_2._parent is et
+    # assert reify(et_2, {a_lv: 1})._parent is et

@@ -1,5 +1,5 @@
 -e ./
-unification
+logical-unification
 ipython
 coveralls
 pydocstyle>=3.0.0
