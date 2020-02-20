@@ -7,6 +7,12 @@ from cons.core import ConsError, ConsNull, ConsPair, car, cdr, cons
 from .core import etuple, ExpressionTuple
 
 try:
+    from packaging import version
+    import unification
+
+    if version.parse(unification.__version__) < version.parse("0.4.0"):
+        raise ModuleNotFoundError()
+
     from unification.core import _reify, _unify, isvar, construction_sentinel
 except ModuleNotFoundError:
     pass
