@@ -7,13 +7,19 @@ from cons.core import ConsError, ConsNull, ConsPair, car, cdr, cons
 from .core import etuple, ExpressionTuple
 
 try:
-    from unification.core import _reify, _unify, isvar
+    from packaging import version
+    import unification
+
+    if version.parse(unification.__version__) < version.parse("0.4.0"):
+        raise ModuleNotFoundError()
+
+    from unification.core import _reify, _unify, isvar, construction_sentinel
 except ModuleNotFoundError:
     pass
 else:
 
     def _unify_ExpressionTuple(u, v, s):
-        return _unify(getattr(u, "_tuple", u), getattr(v, "_tuple", v), s)
+        yield _unify(getattr(u, "_tuple", u), getattr(v, "_tuple", v), s)
 
     _unify.add((ExpressionTuple, ExpressionTuple, Mapping), _unify_ExpressionTuple)
     _unify.add((tuple, ExpressionTuple, Mapping), _unify_ExpressionTuple)
@@ -22,7 +28,9 @@ else:
     def _reify_ExpressionTuple(u, s):
         # The point of all this: we don't want to lose the expression
         # tracking/caching information.
-        res = _reify(u._tuple, s)
+        res = yield _reify(u._tuple, s)
+
+        yield construction_sentinel
 
         res_same = tuple(
             a == b for a, b in zip(u, res) if not isvar(a) and not isvar(b)
@@ -30,16 +38,18 @@ else:
 
         if len(res_same) == len(u) and all(res_same):
             # Everything is equal and there are no logic variables
-            return u
+            yield u
+            return
 
         if getattr(u, "_parent", None) and all(res_same):
             # If we simply swapped-out logic variables, then we don't want to
             # lose the parent etuple information.
             res = etuple(*res)
             res._parent = u._parent
-            return res
+            yield res
+            return
 
-        return etuple(*res)
+        yield etuple(*res)
 
     _reify.add((ExpressionTuple, Mapping), _reify_ExpressionTuple)
 
