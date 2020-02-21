@@ -18,6 +18,7 @@ def test_ExpressionTuple(capsys):
 
     assert e5 == e6
     assert hash(e5) == hash(e6)
+    assert ExpressionTuple((ExpressionTuple((1,)), 2)) != ExpressionTuple((1, 2))
 
     # Not sure if we really want this; it's more
     # common to have a copy constructor, no?

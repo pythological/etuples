@@ -284,7 +284,13 @@ class ExpressionTuple(Sequence):
         while queue:
             i_s, i_o = queue.pop()
 
-            if isinstance(i_s, ExpressionTuple) or isinstance(i_o, ExpressionTuple):
+            if (
+                isinstance(i_s, Sequence)
+                and isinstance(i_o, Sequence)
+                and (
+                    isinstance(i_s, ExpressionTuple) or isinstance(i_o, ExpressionTuple)
+                )
+            ):
                 queue.extend(zip(i_s, i_o))
             elif i_s != i_o:
                 return False
