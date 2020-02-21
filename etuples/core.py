@@ -1,14 +1,48 @@
 import inspect
 import reprlib
 
-import toolz
-
-from collections.abc import Sequence
+from collections import deque
+from collections.abc import Sequence, Generator
 
 
 etuple_repr = reprlib.Repr()
 etuple_repr.maxstring = 100
 etuple_repr.maxother = 100
+
+
+def trampoline_eval(z, res_filter=None):
+    """Evaluate a stream of generators.
+
+    This implementation consists of a deque that simulates an evaluation stack
+    of generator-produced operations.  We're able to overcome `RecursionError`s
+    this way.
+    """
+
+    if not isinstance(z, Generator):  # pragma: no cover
+        return z
+
+    stack = deque()
+    z_args, z_out = None, None
+    stack.append(z)
+
+    while stack:
+        z = stack[-1]
+        try:
+            z_out = z.send(z_args)
+
+            if res_filter:  # pragma: no cover
+                _ = res_filter(z, z_out)
+
+            if isinstance(z_out, Generator):
+                stack.append(z_out)
+                z_args = None
+            else:
+                z_args = z_out
+
+        except StopIteration:
+            _ = stack.pop()
+
+    return z_out
 
 
 class InvalidExpression(Exception):
@@ -35,9 +69,13 @@ class KwdPair(object):
         self.arg = arg
         self.value = value
 
-    @property
-    def eval_obj(self):
-        return KwdPair(self.arg, getattr(self.value, "eval_obj", self.value))
+    def _eval_step(self):
+        if isinstance(self.value, (ExpressionTuple, KwdPair)):
+            value = yield self.value._eval_step()
+        else:
+            value = self.value
+
+        yield KwdPair(self.arg, value)
 
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.arg)}, {repr(self.value)})"
@@ -111,28 +149,36 @@ class ExpressionTuple(Sequence):
 
     @property
     def eval_obj(self):
-        """Return the evaluation of this expression tuple.
+        """Return the evaluation of this expression tuple."""
+        return trampoline_eval(self._eval_step())
 
-        Warning: If the evaluation value isn't cached, it will be evaluated
-        recursively.
-
-        """
+    def _eval_step(self):
         if len(self._tuple) == 0:
-            raise InvalidExpression()
+            raise InvalidExpression("Empty expression.")
 
         if self._eval_obj is not self.null:
-            return self._eval_obj
+            yield self._eval_obj
         else:
             op = self._tuple[0]
-            op = getattr(op, "eval_obj", op)
+
+            if isinstance(op, (ExpressionTuple, KwdPair)):
+                op = yield op._eval_step()
 
             if not callable(op):
-                raise InvalidExpression()
+                raise InvalidExpression(
+                    "ExpressionTuple does not have a callable operator."
+                )
 
-            evaled_args = [getattr(i, "eval_obj", i) for i in self._tuple[1:]]
-            arg_grps = toolz.groupby(lambda x: isinstance(x, KwdPair), evaled_args)
-            evaled_args = arg_grps.get(False, [])
-            evaled_kwargs = arg_grps.get(True, [])
+            evaled_args = []
+            evaled_kwargs = []
+            for i in self._tuple[1:]:
+                if isinstance(i, (ExpressionTuple, KwdPair)):
+                    i = yield i._eval_step()
+
+                if isinstance(i, KwdPair):
+                    evaled_kwargs.append(i)
+                else:
+                    evaled_args.append(i)
 
             try:
                 op_sig = inspect.signature(op)
@@ -150,7 +196,7 @@ class ExpressionTuple(Sequence):
             # assert not isinstance(_eval_obj, ExpressionTuple)
 
             self._eval_obj = _eval_obj
-            return self._eval_obj
+            yield self._eval_obj
 
     @eval_obj.setter
     def eval_obj(self, obj):
@@ -221,9 +267,32 @@ class ExpressionTuple(Sequence):
                     p.pretty(item)
 
     def __eq__(self, other):
-        return self._tuple == other
+
+        # Built-in `==` won't work in CPython for deeply nested structures.
+
+        # TODO: We could track the level of `ExpressionTuple`-only nesting and
+        # apply TCO only when it reaches a certain level.
+
+        if not isinstance(other, Sequence):
+            return NotImplemented
+
+        if len(other) != len(self):
+            return False
+
+        queue = deque(zip(self._tuple, other))
+
+        while queue:
+            i_s, i_o = queue.pop()
+
+            if isinstance(i_s, ExpressionTuple) or isinstance(i_o, ExpressionTuple):
+                queue.extend(zip(i_s, i_o))
+            elif i_s != i_o:
+                return False
+
+        return True
 
     def __hash__(self):
+        # XXX: CPython fails for deeply nested tuples!
         return hash(self._tuple)
 
 

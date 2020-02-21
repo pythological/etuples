@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from operator import add
@@ -10,6 +12,12 @@ def test_ExpressionTuple(capsys):
     e0 = ExpressionTuple((add, 1, 2))
     assert hash(e0) == hash((add, 1, 2))
     assert e0 == ExpressionTuple(e0)
+
+    e5 = ExpressionTuple((1, ExpressionTuple((2, 3))))
+    e6 = ExpressionTuple((1, ExpressionTuple((2, 3))))
+
+    assert e5 == e6
+    assert hash(e5) == hash(e6)
 
     # Not sure if we really want this; it's more
     # common to have a copy constructor, no?
@@ -50,6 +58,10 @@ def test_ExpressionTuple(capsys):
 
     with pytest.raises(InvalidExpression):
         e4.eval_obj
+
+    assert ExpressionTuple((ExpressionTuple((lambda: add,)), 1, 1)).eval_obj == 2
+    assert ExpressionTuple((1, 2)) != ExpressionTuple((1,))
+    assert ExpressionTuple((1, 2)) != ExpressionTuple((1, 3))
 
 
 def test_etuple():
@@ -183,3 +195,48 @@ def test_pprint():
         pretty_mod.pretty(et)
         == "e(\n  1,\n  e('a', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),\n  e(3, 'b'),\n  blah=e(c, 0))"
     )
+
+
+def gen_long_add_chain(N=None, num=1):
+    b_struct = num
+    if N is None:
+        N = sys.getrecursionlimit()
+    for i in range(0, N):
+        b_struct = etuple(add, num, b_struct)
+    return b_struct
+
+
+def test_reify_recursion_limit():
+
+    a = gen_long_add_chain(10)
+    assert a.eval_obj == 11
+
+    r_limit = sys.getrecursionlimit()
+
+    try:
+        sys.setrecursionlimit(100)
+
+        a = gen_long_add_chain(200)
+        assert a.eval_obj == 201
+
+        b = gen_long_add_chain(200, num=2)
+        assert b.eval_obj == 402
+
+        c = gen_long_add_chain(200)
+        assert a == c
+
+    finally:
+        sys.setrecursionlimit(r_limit)
+
+
+@pytest.mark.xfail(strict=True)
+def test_reify_recursion_limit_hash():
+    r_limit = sys.getrecursionlimit()
+
+    try:
+        sys.setrecursionlimit(100)
+        a = gen_long_add_chain(200)
+        # CPython uses the call stack and fails
+        assert hash(a)
+    finally:
+        sys.setrecursionlimit(r_limit)

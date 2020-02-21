@@ -4,7 +4,7 @@ from multipledispatch import dispatch
 
 from cons.core import ConsError, ConsNull, ConsPair, car, cdr, cons
 
-from .core import etuple, ExpressionTuple
+from .core import etuple, ExpressionTuple, trampoline_eval
 
 try:
     from packaging import version
@@ -103,30 +103,46 @@ def etuplize(x, shallow=False, return_bad_args=False, convert_ConsPairs=True):
       of raising an exception.
 
     """
-    if isinstance(x, ExpressionTuple):
-        return x
-    elif convert_ConsPairs and x is not None and isinstance(x, (ConsNull, ConsPair)):
-        return etuple(*x)
 
-    try:
-        op, args = rator(x), rands(x)
-    except ConsError:
-        op, args = None, None
+    def etuplize_step(
+        x,
+        shallow=shallow,
+        return_bad_args=return_bad_args,
+        convert_ConsPairs=convert_ConsPairs,
+    ):
+        if isinstance(x, ExpressionTuple):
+            yield x
+            return
+        elif (
+            convert_ConsPairs and x is not None and isinstance(x, (ConsNull, ConsPair))
+        ):
+            yield etuple(*x)
+            return
 
-    if not callable(op) or not isinstance(args, (ConsNull, ConsPair)):
-        if return_bad_args:
-            return x
+        try:
+            op, args = rator(x), rands(x)
+        except ConsError:
+            op, args = None, None
+
+        if not callable(op) or not isinstance(args, (ConsNull, ConsPair)):
+            if return_bad_args:
+                yield x
+                return
+            else:
+                raise TypeError(f"x is neither a non-str Sequence nor term: {type(x)}")
+
+        if shallow:
+            et_op = op
+            et_args = args
         else:
-            raise TypeError(f"x is neither a non-str Sequence nor term: {type(x)}")
+            et_op = yield etuplize_step(op, return_bad_args=True)
+            et_args = []
+            for a in args:
+                e = yield etuplize_step(
+                    a, return_bad_args=True, convert_ConsPairs=False
+                )
+                et_args.append(e)
 
-    if shallow:
-        et_op = op
-        et_args = args
-    else:
-        et_op = etuplize(op, return_bad_args=True)
-        et_args = tuple(
-            etuplize(a, return_bad_args=True, convert_ConsPairs=False) for a in args
-        )
+        yield etuple(et_op, *et_args, eval_obj=x)
 
-    res = etuple(et_op, *et_args, eval_obj=x)
-    return res
+    return trampoline_eval(etuplize_step(x))
