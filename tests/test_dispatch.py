@@ -3,7 +3,7 @@ from pytest import raises, importorskip
 from operator import add
 from collections.abc import Sequence
 
-from etuples.core import ExpressionTuple, etuple
+from etuples.core import ExpressionTuple, etuple, KwdPair
 from etuples.dispatch import apply, rator, rands, etuplize
 
 
@@ -151,3 +151,13 @@ def test_unification():
     # et_2 = cons(b_lv, et_1)
     # assert et_2._parent is et
     # assert reify(et_2, {a_lv: 1})._parent is et
+
+    e1 = KwdPair("name", "blah")
+    e2 = KwdPair("name", a_lv)
+    assert unify(e1, e2, {}) == {a_lv: "blah"}
+    assert reify(e2, {a_lv: "blah"}) == e1
+
+    e1 = etuple(add, 1, name="blah")
+    e2 = etuple(add, 1, name=a_lv)
+    assert unify(e1, e2, {}) == {a_lv: "blah"}
+    assert reify(e2, {a_lv: "blah"}) == e1

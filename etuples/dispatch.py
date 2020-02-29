@@ -4,7 +4,7 @@ from multipledispatch import dispatch
 
 from cons.core import ConsError, ConsNull, ConsPair, car, cdr, cons
 
-from .core import etuple, ExpressionTuple, trampoline_eval
+from .core import etuple, ExpressionTuple, trampoline_eval, KwdPair
 
 try:
     from packaging import version
@@ -24,6 +24,14 @@ else:
     _unify.add((ExpressionTuple, ExpressionTuple, Mapping), _unify_ExpressionTuple)
     _unify.add((tuple, ExpressionTuple, Mapping), _unify_ExpressionTuple)
     _unify.add((ExpressionTuple, tuple, Mapping), _unify_ExpressionTuple)
+
+    def _unify_KwdPair(u, v, s):
+        s = yield _unify(u.arg, v.arg, s)
+        if s is not False:
+            s = yield _unify(u.value, v.value, s)
+        yield s
+
+    _unify.add((KwdPair, KwdPair, Mapping), _unify_KwdPair)
 
     def _reify_ExpressionTuple(u, s):
         # The point of all this: we don't want to lose the expression
@@ -52,6 +60,16 @@ else:
         yield etuple(*res)
 
     _reify.add((ExpressionTuple, Mapping), _reify_ExpressionTuple)
+
+    def _reify_KwdPair(u, s):
+        arg = yield _reify(u.arg, s)
+        value = yield _reify(u.value, s)
+
+        yield construction_sentinel
+
+        yield KwdPair(arg, value)
+
+    _reify.add((KwdPair, Mapping), _reify_KwdPair)
 
 
 @dispatch(object)
