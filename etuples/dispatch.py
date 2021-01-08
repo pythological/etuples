@@ -1,19 +1,18 @@
-from collections.abc import Callable, Sequence, Mapping
-
-from multipledispatch import dispatch
+from collections.abc import Callable, Mapping, Sequence
 
 from cons.core import ConsError, ConsNull, ConsPair, car, cdr, cons
+from multipledispatch import dispatch
 
-from .core import etuple, ExpressionTuple, trampoline_eval, KwdPair
+from .core import ExpressionTuple, KwdPair, etuple, trampoline_eval
 
-try:
-    from packaging import version
+try:  # noqa: C901
     import unification
+    from packaging import version
 
     if version.parse(unification.__version__) < version.parse("0.4.0"):
         raise ModuleNotFoundError()
 
-    from unification.core import _reify, _unify, isvar, construction_sentinel
+    from unification.core import _reify, _unify, construction_sentinel, isvar
 except ModuleNotFoundError:
     pass
 else:

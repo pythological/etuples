@@ -1,10 +1,10 @@
-from pytest import raises, importorskip
-
-from operator import add
 from collections.abc import Sequence
+from operator import add
 
-from etuples.core import ExpressionTuple, etuple, KwdPair
-from etuples.dispatch import apply, rator, rands, etuplize
+from pytest import importorskip, raises
+
+from etuples.core import ExpressionTuple, KwdPair, etuple
+from etuples.dispatch import apply, etuplize, rands, rator
 
 
 class Node:
@@ -113,11 +113,15 @@ def test_unification():
     assert isinstance(res, ExpressionTuple)
     assert res == etuple(add, 1, 2)
 
-    et = etuple(a_lv,)
+    et = etuple(
+        a_lv,
+    )
     res = reify(et, {a_lv: 1})
     assert isinstance(res, ExpressionTuple)
 
-    et = etuple(a_lv,)
+    et = etuple(
+        a_lv,
+    )
     # We choose to allow unification with regular tuples.
     if etuple(1) == (1,):
         res = unify(et, (1,))

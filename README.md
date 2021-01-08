@@ -133,11 +133,22 @@ Using `pip`:
 pip install etuples
 ```
 
-To install from source:
+### Development
+
+First obtain the project source:
 ```bash
 git clone git@github.com:pythological/etuples.git
-cd etuples
-pip install -r requirements.txt
+```
+
+Create a virtual environment and install the development dependencies:
+```bash
+$ pip install -r requirements.txt
+```
+
+Set up `pre-commit` hooks:
+
+```bash
+$ pre-commit install --install-hooks
 ```
 
 Tests can be run with the provided `Makefile`:

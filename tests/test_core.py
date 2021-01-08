@@ -1,10 +1,9 @@
 import sys
+from operator import add
 
 import pytest
 
-from operator import add
-
-from etuples.core import ExpressionTuple, etuple, KwdPair, InvalidExpression
+from etuples.core import ExpressionTuple, InvalidExpression, KwdPair, etuple
 
 
 def test_ExpressionTuple(capsys):
@@ -194,7 +193,7 @@ def test_pprint():
     et = etuple(1, etuple("a", *range(20)), etuple(3, "b"), blah=etuple("c", 0))
     assert (
         pretty_mod.pretty(et)
-        == "e(\n  1,\n  e('a', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),\n  e(3, 'b'),\n  blah=e(c, 0))"
+        == "e(\n  1,\n  e('a', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),\n  e(3, 'b'),\n  blah=e(c, 0))"  # noqa: E501
     )
 
 
