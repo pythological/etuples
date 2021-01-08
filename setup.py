@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import versioneer
-
 from os.path import exists
+
 from setuptools import setup
+
+import versioneer
 
 setup(
     name="etuples",
@@ -13,7 +14,10 @@ setup(
     maintainer="Brandon T. Willard",
     maintainer_email="brandonwillard+etuples@gmail.com",
     packages=["etuples"],
-    install_requires=["cons", "multipledispatch",],
+    install_requires=[
+        "cons",
+        "multipledispatch",
+    ],
     long_description=open("README.md").read() if exists("README.md") else "",
     long_description_content_type="text/markdown",
     python_requires=">=3.6",

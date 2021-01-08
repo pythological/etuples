@@ -1,6 +1,5 @@
 -e ./
 logical-unification
-ipython
 coveralls
 pydocstyle>=3.0.0
 pytest>=5.0.0
@@ -10,3 +9,6 @@ pylint>=2.3.1
 black>=19.3b0; platform.python_implementation!='PyPy'
 diff-cover
 versioneer
+isort
+coverage>=5.1
+pre-commit

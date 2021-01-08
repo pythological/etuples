@@ -1,9 +1,7 @@
 import inspect
 import reprlib
-
 from collections import deque
-from collections.abc import Sequence, Generator
-
+from collections.abc import Generator, Sequence
 
 etuple_repr = reprlib.Repr()
 etuple_repr.maxstring = 100
@@ -256,7 +254,7 @@ class ExpressionTuple(Sequence):
 
     def _repr_pretty_(self, p, cycle):
         if cycle:
-            p.text(f"e(...)")  # pragma: no cover
+            p.text("e(...)")  # pragma: no cover
         else:
             with p.group(2, "e(", ")"):
                 p.breakable(sep="")
