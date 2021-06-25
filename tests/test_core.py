@@ -1,5 +1,6 @@
 import sys
 from operator import add
+from types import GeneratorType
 
 import pytest
 
@@ -116,6 +117,13 @@ def test_etuple():
     e_ladd = etuple(1, 2) + (3,)
     assert isinstance(e_ladd, ExpressionTuple)
     assert e_ladd == (1, 2, 3)
+
+
+def test_etuple_generator():
+    e_gen = etuple(lambda v: (i for i in v), range(3))
+    e_gen_res = e_gen.evaled_obj
+    assert isinstance(e_gen_res, GeneratorType)
+    assert tuple(e_gen_res) == tuple(range(3))
 
 
 def test_etuple_kwargs():
