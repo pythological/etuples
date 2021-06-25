@@ -9,6 +9,13 @@ etuple_repr.maxstring = 100
 etuple_repr.maxother = 100
 
 
+class IgnoredGenerator:
+    __slots__ = ("gen",)
+
+    def __init__(self, gen):
+        self.gen = gen
+
+
 def trampoline_eval(z, res_filter=None):
     """Evaluate a stream of generators.
 
@@ -19,6 +26,8 @@ def trampoline_eval(z, res_filter=None):
 
     if not isinstance(z, Generator):  # pragma: no cover
         return z
+    elif isinstance(z, IgnoredGenerator):
+        return z.gen
 
     stack = deque()
     z_args, z_out = None, None
@@ -41,7 +50,10 @@ def trampoline_eval(z, res_filter=None):
         except StopIteration:
             _ = stack.pop()
 
-    return z_out
+    if isinstance(z_out, IgnoredGenerator):
+        return z_out.gen
+    else:
+        return z_out
 
 
 class InvalidExpression(Exception):
@@ -149,7 +161,8 @@ class ExpressionTuple(Sequence):
     @property
     def evaled_obj(self):
         """Return the evaluation of this expression tuple."""
-        return trampoline_eval(self._eval_step())
+        res = self._eval_step()
+        return trampoline_eval(res)
 
     @property
     def eval_obj(self):
@@ -201,10 +214,12 @@ class ExpressionTuple(Sequence):
 
                 _evaled_obj = op(*op_args.args, **op_args.kwargs)
 
-            # assert not isinstance(_evaled_obj, ExpressionTuple)
-
-            self._evaled_obj = _evaled_obj
-            yield self._evaled_obj
+            if isinstance(_evaled_obj, Generator):
+                self._evaled_obj = _evaled_obj
+                yield IgnoredGenerator(_evaled_obj)
+            else:
+                self._evaled_obj = _evaled_obj
+                yield self._evaled_obj
 
     @evaled_obj.setter
     def evaled_obj(self, obj):
