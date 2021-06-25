@@ -44,17 +44,17 @@ def test_etuple_apply():
     assert apply(add, (1, 2)) == 3
     assert apply(1, (2,)) == (1, 2)
 
-    # Make sure that we don't lose underlying `eval_obj`s
+    # Make sure that we don't lose underlying `evaled_obj`s
     # when taking apart and re-creating expression tuples
     # using `kanren`'s `operator`, `arguments` and `term`
     # functions.
     e1 = etuple(add, (object(),), (object(),))
-    e1_obj = e1.eval_obj
+    e1_obj = e1.evaled_obj
 
     e1_dup = (rator(e1),) + rands(e1)
 
     assert isinstance(e1_dup, ExpressionTuple)
-    assert e1_dup.eval_obj == e1_obj
+    assert e1_dup.evaled_obj == e1_obj
 
     e1_dup_2 = apply(rator(e1), rands(e1))
     assert e1_dup_2 == e1_obj
@@ -128,7 +128,7 @@ def test_unification():
         assert res == {a_lv: 1}
 
     et = etuple(add, 1, 2)
-    assert et.eval_obj == 3
+    assert et.evaled_obj == 3
 
     res = unify(et, cons(a_lv, b_lv))
     assert res == {a_lv: add, b_lv: et[1:]}
@@ -136,7 +136,7 @@ def test_unification():
     # Make sure we've preserved the original object after deconstruction via
     # `unify`
     assert res[b_lv]._parent is et
-    assert ((res[a_lv],) + res[b_lv])._eval_obj == 3
+    assert ((res[a_lv],) + res[b_lv])._evaled_obj == 3
 
     # Make sure we've preserved the original object after reconstruction via
     # `reify`
