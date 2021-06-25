@@ -1,5 +1,6 @@
 import inspect
 import reprlib
+import warnings
 from collections import deque
 from collections.abc import Generator, Sequence
 
@@ -107,7 +108,7 @@ class ExpressionTuple(Sequence):
     TODO: Should probably use weakrefs for that.
     """
 
-    __slots__ = ("_eval_obj", "_tuple", "_parent")
+    __slots__ = ("_evaled_obj", "_tuple", "_parent")
     null = object()
 
     def __new__(cls, seq=None, **kwargs):
@@ -115,7 +116,7 @@ class ExpressionTuple(Sequence):
         # XXX: This doesn't actually remove the entry from the kwargs
         # passed to __init__!
         # It does, however, remove it for the check below.
-        kwargs.pop("eval_obj", None)
+        kwargs.pop("evaled_obj", None)
 
         if seq is not None and not kwargs and type(seq) == cls:
             return seq
@@ -127,13 +128,13 @@ class ExpressionTuple(Sequence):
     def __init__(self, seq=None, **kwargs):
         """Create an expression tuple.
 
-        If the keyword 'eval_obj' is given, the `ExpressionTuple`'s
+        If the keyword 'evaled_obj' is given, the `ExpressionTuple`'s
         evaluated object is set to the corresponding value.
         XXX: There is no verification/check that the arguments evaluate to the
-        user-specified 'eval_obj', so be careful.
+        user-specified 'evaled_obj', so be careful.
         """
 
-        _eval_obj = kwargs.pop("eval_obj", self.null)
+        _evaled_obj = kwargs.pop("evaled_obj", self.null)
         etuple_kwargs = tuple(KwdPair(k, v) for k, v in kwargs.items())
 
         if seq:
@@ -142,20 +143,29 @@ class ExpressionTuple(Sequence):
             self._tuple = etuple_kwargs
 
         # TODO: Consider making these a weakrefs.
-        self._eval_obj = _eval_obj
+        self._evaled_obj = _evaled_obj
         self._parent = None
 
     @property
-    def eval_obj(self):
+    def evaled_obj(self):
         """Return the evaluation of this expression tuple."""
+        return trampoline_eval(self._eval_step())
+
+    @property
+    def eval_obj(self):
+        warnings.warn(
+            "`eval_obj` is deprecated; use `evaled_obj`.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return trampoline_eval(self._eval_step())
 
     def _eval_step(self):
         if len(self._tuple) == 0:
             raise InvalidExpression("Empty expression.")
 
-        if self._eval_obj is not self.null:
-            yield self._eval_obj
+        if self._evaled_obj is not self.null:
+            yield self._evaled_obj
         else:
             op = self._tuple[0]
 
@@ -182,22 +192,22 @@ class ExpressionTuple(Sequence):
                 op_sig = inspect.signature(op)
             except ValueError:
                 # This handles some builtin function types
-                _eval_obj = op(*(evaled_args + [kw.value for kw in evaled_kwargs]))
+                _evaled_obj = op(*(evaled_args + [kw.value for kw in evaled_kwargs]))
             else:
                 op_args = op_sig.bind(
                     *evaled_args, **{kw.arg: kw.value for kw in evaled_kwargs}
                 )
                 op_args.apply_defaults()
 
-                _eval_obj = op(*op_args.args, **op_args.kwargs)
+                _evaled_obj = op(*op_args.args, **op_args.kwargs)
 
-            # assert not isinstance(_eval_obj, ExpressionTuple)
+            # assert not isinstance(_evaled_obj, ExpressionTuple)
 
-            self._eval_obj = _eval_obj
-            yield self._eval_obj
+            self._evaled_obj = _evaled_obj
+            yield self._evaled_obj
 
-    @eval_obj.setter
-    def eval_obj(self, obj):
+    @evaled_obj.setter
+    def evaled_obj(self, obj):
         raise ValueError("Value of evaluated expression cannot be set!")
 
     def __add__(self, x):

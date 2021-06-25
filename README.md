@@ -27,17 +27,17 @@ ExpressionTuple((<built-in function add>, 1))
 `etuple`s can also be evaluated:
 
 ```python
->>> et.eval_obj
+>>> et.evaled_obj
 3
 ```
 
 Evaluated `etuple`s are cached:
 ```python
 >>> et = etuple(add, "a", "b")
->>> et.eval_obj
+>>> et.evaled_obj
 'ab'
 
->>> et.eval_obj is et.eval_obj
+>>> et.evaled_obj is et.evaled_obj
 True
 ```
 
@@ -46,7 +46,7 @@ Reconstructed `etuple`s and their evaluation results are preserved across tuple 
 >>> et_new = (et[0],) + et[1:]
 >>> et_new is et
 True
->>> et_new.eval_obj is et.eval_obj
+>>> et_new.evaled_obj is et.evaled_obj
 True
 ```
 
@@ -115,7 +115,7 @@ def apply_Operator(rator, rands):
 >>> pprint(et)
 e(+, e(*, 1, 2), 3)
 
->>> et.eval_obj is add_node
+>>> et.evaled_obj is add_node
 True
 ```
 

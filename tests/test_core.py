@@ -37,31 +37,34 @@ def test_ExpressionTuple(capsys):
     assert 2 * e0 == ExpressionTuple((add, 1, 2, add, 1, 2))
 
     e1 = ExpressionTuple((add, e0, 3))
-    assert e1.eval_obj == 6
+    assert e1.evaled_obj == 6
 
-    # ("_eval_obj", "_tuple", "_parent")
+    # ("_evaled_obj", "_tuple", "_parent")
     e2 = e1[1:2]
     assert e2._parent is e1
 
     assert e2 == ExpressionTuple((e0,))
 
-    ExpressionTuple((print, "hi")).eval_obj
+    ExpressionTuple((print, "hi")).evaled_obj
     captured = capsys.readouterr()
     assert captured.out == "hi\n"
 
     e3 = ExpressionTuple(())
 
     with pytest.raises(InvalidExpression):
-        e3.eval_obj
+        e3.evaled_obj
 
     e4 = ExpressionTuple((1,))
 
     with pytest.raises(InvalidExpression):
-        e4.eval_obj
+        e4.evaled_obj
 
-    assert ExpressionTuple((ExpressionTuple((lambda: add,)), 1, 1)).eval_obj == 2
+    assert ExpressionTuple((ExpressionTuple((lambda: add,)), 1, 1)).evaled_obj == 2
     assert ExpressionTuple((1, 2)) != ExpressionTuple((1,))
     assert ExpressionTuple((1, 2)) != ExpressionTuple((1, 3))
+
+    with pytest.warns(DeprecationWarning):
+        ExpressionTuple((print, "hi")).eval_obj
 
 
 def test_etuple():
@@ -72,17 +75,17 @@ def test_etuple():
 
     e1 = etuple(test_op, 1, 2)
 
-    assert e1._eval_obj is ExpressionTuple.null
+    assert e1._evaled_obj is ExpressionTuple.null
 
     with pytest.raises(ValueError):
-        e1.eval_obj = 1
+        e1.evaled_obj = 1
 
-    e1_obj = e1.eval_obj
+    e1_obj = e1.evaled_obj
     assert len(e1_obj) == 3
     assert all(type(o) == object for o in e1_obj)
 
-    # Make sure we don't re-create the cached `eval_obj`
-    e1_obj_2 = e1.eval_obj
+    # Make sure we don't re-create the cached `evaled_obj`
+    e1_obj_2 = e1.evaled_obj
     assert e1_obj == e1_obj_2
 
     # Confirm that evaluation is recursive
@@ -96,12 +99,12 @@ def test_etuple():
     assert isinstance(e2[:1], ExpressionTuple)
     assert e2[1] == e2[1:2][0]
 
-    e2_obj = e2.eval_obj
+    e2_obj = e2.evaled_obj
 
     assert type(e2_obj) == tuple
     assert len(e2_obj) == 4
     assert all(type(o) == object for o in e2_obj)
-    # Make sure that it used `e1`'s original `eval_obj`
+    # Make sure that it used `e1`'s original `evaled_obj`
     assert e2_obj[1:] == e1_obj
 
     # Confirm that any combination of `tuple`s/`etuple`s in
@@ -128,7 +131,7 @@ def test_etuple_kwargs():
         return [a, b, c, d]
 
     e1 = etuple(test_func, 1, 2)
-    assert e1.eval_obj == [1, 2, None, "d-arg"]
+    assert e1.evaled_obj == [1, 2, None, "d-arg"]
 
     # Make sure we handle variadic args properly
     def test_func2(*args, c=None, d="d-arg", **kwargs):
@@ -136,29 +139,29 @@ def test_etuple_kwargs():
         return list(args) + [c, d]
 
     e0 = etuple(test_func2, c=3)
-    assert e0.eval_obj == [3, "d-arg"]
+    assert e0.evaled_obj == [3, "d-arg"]
 
     e11 = etuple(test_func2, 1, 2)
-    assert e11.eval_obj == [1, 2, None, "d-arg"]
+    assert e11.evaled_obj == [1, 2, None, "d-arg"]
 
     e2 = etuple(test_func, 1, 2, 3)
-    assert e2.eval_obj == [1, 2, 3, "d-arg"]
+    assert e2.evaled_obj == [1, 2, 3, "d-arg"]
 
     e3 = etuple(test_func, 1, 2, 3, 4)
-    assert e3.eval_obj == [1, 2, 3, 4]
+    assert e3.evaled_obj == [1, 2, 3, 4]
 
     e4 = etuple(test_func, 1, 2, c=3)
-    assert e4.eval_obj == [1, 2, 3, "d-arg"]
+    assert e4.evaled_obj == [1, 2, 3, "d-arg"]
 
     e5 = etuple(test_func, 1, 2, d=3)
-    assert e5.eval_obj == [1, 2, None, 3]
+    assert e5.evaled_obj == [1, 2, None, 3]
 
     e6 = etuple(test_func, 1, 2, 3, d=4)
-    assert e6.eval_obj == [1, 2, 3, 4]
+    assert e6.evaled_obj == [1, 2, 3, 4]
 
     # Try evaluating nested etuples
     e7 = etuple(test_func, etuple(add, 1, 0), 2, c=etuple(add, 1, etuple(add, 1, 1)))
-    assert e7.eval_obj == [1, 2, 3, "d-arg"]
+    assert e7.evaled_obj == [1, 2, 3, "d-arg"]
 
     # Try a function without an obtainable signature object
     e8 = etuple(
@@ -166,12 +169,12 @@ def test_etuple_kwargs():
         etuple(list, ["a", "b", "c", "d"]),
         start=etuple(add, 1, etuple(add, 1, 1)),
     )
-    assert list(e8.eval_obj) == [(3, "a"), (4, "b"), (5, "c"), (6, "d")]
+    assert list(e8.evaled_obj) == [(3, "a"), (4, "b"), (5, "c"), (6, "d")]
 
-    # Use "eval_obj" kwarg and make sure it doesn't end up in the `_tuple` object
-    e9 = etuple(add, 1, 2, eval_obj=3)
+    # Use "evaled_obj" kwarg and make sure it doesn't end up in the `_tuple` object
+    e9 = etuple(add, 1, 2, evaled_obj=3)
     assert e9._tuple == (add, 1, 2)
-    assert e9._eval_obj == 3
+    assert e9._evaled_obj == 3
 
 
 def test_str():
@@ -209,7 +212,7 @@ def gen_long_add_chain(N=None, num=1):
 def test_reify_recursion_limit():
 
     a = gen_long_add_chain(10)
-    assert a.eval_obj == 11
+    assert a.evaled_obj == 11
 
     r_limit = sys.getrecursionlimit()
 
@@ -217,10 +220,10 @@ def test_reify_recursion_limit():
         sys.setrecursionlimit(100)
 
         a = gen_long_add_chain(200)
-        assert a.eval_obj == 201
+        assert a.evaled_obj == 201
 
         b = gen_long_add_chain(200, num=2)
-        assert b.eval_obj == 402
+        assert b.evaled_obj == 402
 
         c = gen_long_add_chain(200)
         assert a == c

@@ -94,7 +94,7 @@ def apply_Sequence(rator, rands):
 
 @apply.register(Callable, ExpressionTuple)
 def apply_ExpressionTuple(rator, rands):
-    return ((rator,) + rands).eval_obj
+    return ((rator,) + rands).evaled_obj
 
 
 # These are used to maintain some parity with the old `kanren.term` API
@@ -160,6 +160,6 @@ def etuplize(x, shallow=False, return_bad_args=False, convert_ConsPairs=True):
                 )
                 et_args.append(e)
 
-        yield etuple(et_op, *et_args, eval_obj=x)
+        yield etuple(et_op, *et_args, evaled_obj=x)
 
     return trampoline_eval(etuplize_step(x))
