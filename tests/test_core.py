@@ -240,6 +240,12 @@ def test_reify_recursion_limit():
         sys.setrecursionlimit(r_limit)
 
 
+@pytest.mark.skip(
+    reason=(
+        "This will cause an unrecoverable stack overflow"
+        " in some cases (e.g. GitHub Actions' default ubuntu-latest runners)"
+    )
+)
 @pytest.mark.xfail(strict=True)
 def test_reify_recursion_limit_hash():
     r_limit = sys.getrecursionlimit()
