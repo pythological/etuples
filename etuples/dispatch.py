@@ -102,8 +102,15 @@ operator, arguments, term = rator, rands, apply
 
 
 @dispatch(object)
-def etuplize(x, shallow=False, return_bad_args=False, convert_ConsPairs=True):
-    """Return an expression-tuple for an object (i.e. a tuple of rand and rators).
+def etuplize(
+    x,
+    shallow=False,
+    return_bad_args=False,
+    convert_ConsPairs=True,
+    rator_transform_fn=lambda x: x,
+    rands_transform_fn=lambda x: x,
+):
+    r"""Return an expression-tuple for an object (i.e. a tuple of rand and rators).
 
     When evaluated, the rand and rators should [re-]construct the object.  When
     the object cannot be given such a form, it is simply converted to an
@@ -112,12 +119,18 @@ def etuplize(x, shallow=False, return_bad_args=False, convert_ConsPairs=True):
     Parameters
     ----------
     x: object
-      Object to convert to expression-tuple form.
+        Object to convert to expression-tuple form.
     shallow: bool
-      Whether or not to do a shallow conversion.
+        Whether or not to do a shallow conversion.
     return_bad_args: bool
-      Return the passed argument when its type is not appropriate, instead
-      of raising an exception.
+        Return the passed argument when its type is not appropriate, instead
+        of raising an exception.
+    rator_transform_fn: callable
+        A function to be applied to each rator/CAR element of each constructed
+        `ExpressionTuple`.  The returned value is used in place of the input, and
+        the function is not applied to existing `ExpressionTuple`\s.
+    rands_transform_fn: callable
+        The same as `rator_transform_fn`, but for rands/CDR elements.
 
     """
 
@@ -133,7 +146,12 @@ def etuplize(x, shallow=False, return_bad_args=False, convert_ConsPairs=True):
         elif (
             convert_ConsPairs and x is not None and isinstance(x, (ConsNull, ConsPair))
         ):
-            yield etuple(*x)
+            yield etuple(
+                *(
+                    (rator_transform_fn(rator(x)),)
+                    + tuple(rands_transform_fn(e) for e in rands(x))
+                )
+            )
             return
 
         try:
@@ -148,6 +166,9 @@ def etuplize(x, shallow=False, return_bad_args=False, convert_ConsPairs=True):
             else:
                 raise TypeError(f"x is neither a non-str Sequence nor term: {type(x)}")
 
+        op = rator_transform_fn(op)
+        args = etuple(*tuple(rands_transform_fn(a) for a in args))
+
         if shallow:
             et_op = op
             et_args = args
@@ -155,6 +176,7 @@ def etuplize(x, shallow=False, return_bad_args=False, convert_ConsPairs=True):
             et_op = yield etuplize_step(op, return_bad_args=True)
             et_args = []
             for a in args:
+
                 e = yield etuplize_step(
                     a, return_bad_args=True, convert_ConsPairs=False
                 )

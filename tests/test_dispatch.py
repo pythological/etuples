@@ -93,6 +93,24 @@ def test_etuplize():
     assert type(etuplize(node_2)[-1]) == tuple
     assert etuplize(node_2, shallow=True) == etuple(op_1, node_1, 3, ())
 
+    def rands_transform(x):
+        if x == 1:
+            return 4
+        return x
+
+    assert etuplize(node_2, rands_transform_fn=rands_transform) == etuple(
+        op_1, etuple(op_2, 4, 2), 3, ()
+    )
+
+    def rator_transform(x):
+        if x == op_1:
+            return op_2
+        return x
+
+    assert etuplize(node_2, rator_transform_fn=rator_transform) == etuple(
+        op_2, etuple(op_2, 1, 2), 3, ()
+    )
+
 
 def test_unification():
     from cons import cons
