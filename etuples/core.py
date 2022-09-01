@@ -3,6 +3,7 @@ import reprlib
 import warnings
 from collections import deque
 from collections.abc import Generator, Sequence
+from typing import Any, Callable
 
 etuple_repr = reprlib.Repr()
 etuple_repr.maxstring = 100
@@ -164,6 +165,10 @@ class ExpressionTuple(Sequence):
         res = self._eval_step()
         return trampoline_eval(res)
 
+    @evaled_obj.setter
+    def evaled_obj(self, obj):
+        raise ValueError("Value of evaluated expression cannot be set!")
+
     @property
     def eval_obj(self):
         warnings.warn(
@@ -172,6 +177,9 @@ class ExpressionTuple(Sequence):
             stacklevel=2,
         )
         return trampoline_eval(self._eval_step())
+
+    def _eval_apply(self, op: Callable, op_args: inspect.BoundArguments) -> Any:
+        return op(*op_args.args, **op_args.kwargs)
 
     def _eval_step(self):
         if len(self._tuple) == 0:
@@ -212,7 +220,7 @@ class ExpressionTuple(Sequence):
                 )
                 op_args.apply_defaults()
 
-                _evaled_obj = op(*op_args.args, **op_args.kwargs)
+                _evaled_obj = self._eval_apply(op, op_args)
 
             if isinstance(_evaled_obj, Generator):
                 self._evaled_obj = _evaled_obj
@@ -220,10 +228,6 @@ class ExpressionTuple(Sequence):
             else:
                 self._evaled_obj = _evaled_obj
                 yield self._evaled_obj
-
-    @evaled_obj.setter
-    def evaled_obj(self, obj):
-        raise ValueError("Value of evaluated expression cannot be set!")
 
     def __add__(self, x):
         res = self._tuple + x
