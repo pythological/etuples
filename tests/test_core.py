@@ -68,6 +68,22 @@ def test_ExpressionTuple(capsys):
         ExpressionTuple((print, "hi")).eval_obj
 
 
+def test_eval_apply_fn():
+    class Add(object):
+        def __call__(self):
+            return None
+
+        def add(self, x, y):
+            return x + y
+
+    class AddExpressionTuple(ExpressionTuple):
+        def _eval_apply_fn(self, op):
+            return op.add
+
+    op = Add()
+    assert AddExpressionTuple((op, 1, 2)).evaled_obj == 3
+
+
 def test_etuple():
     """Test basic `etuple` functionality."""
 
