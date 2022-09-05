@@ -102,6 +102,11 @@ operator, arguments, term = rator, rands, apply
 
 
 @dispatch(object)
+def etuplize_fn(op):
+    return etuple
+
+
+@dispatch(object)
 def etuplize(
     x,
     shallow=False,
@@ -140,6 +145,7 @@ def etuplize(
         return_bad_args=return_bad_args,
         convert_ConsPairs=convert_ConsPairs,
     ):
+
         if isinstance(x, ExpressionTuple):
             yield x
             return
@@ -182,6 +188,6 @@ def etuplize(
                 )
                 et_args.append(e)
 
-        yield etuple(et_op, *et_args, evaled_obj=x)
+        yield etuplize_fn(op)(et_op, *et_args, evaled_obj=x)
 
     return trampoline_eval(etuplize_step(x))
