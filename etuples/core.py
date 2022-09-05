@@ -5,6 +5,8 @@ from collections import deque
 from collections.abc import Generator, Sequence
 from typing import Callable
 
+from multipledispatch import dispatch
+
 etuple_repr = reprlib.Repr()
 etuple_repr.maxstring = 100
 etuple_repr.maxother = 100
@@ -337,6 +339,7 @@ class ExpressionTuple(Sequence):
         return hash(self._tuple)
 
 
+@dispatch([object])
 def etuple(*args, **kwargs):
     """Create an ExpressionTuple from the argument list.
 
