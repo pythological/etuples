@@ -51,12 +51,12 @@ else:
         if getattr(u, "_parent", None) and all(res_same):
             # If we simply swapped-out logic variables, then we don't want to
             # lose the parent etuple information.
-            res = etuple(*res)
+            res = type(u)(res)
             res._parent = u._parent
             yield res
             return
 
-        yield etuple(*res)
+        yield type(u)(res)
 
     _reify.add((ExpressionTuple, Mapping), _reify_ExpressionTuple)
 
