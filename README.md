@@ -1,6 +1,5 @@
 # `etuples`
-
-[![Build Status](https://travis-ci.org/pythological/etuples.svg?branch=main)](https://travis-ci.org/pythological/etuples) [![Coverage Status](https://coveralls.io/repos/github/pythological/etuples/badge.svg?branch=main)](https://coveralls.io/github/pythological/etuples?branch=main) [![PyPI](https://img.shields.io/pypi/v/etuples)](https://pypi.org/project/etuples/)
+[![Tests](https://github.com/pythological/etuples/actions/workflows/tests.yml/badge.svg)](https://github.com/pythological/etuples/actions/workflows/tests.yml) [![Coverage Status](https://coveralls.io/repos/github/pythological/etuples/badge.svg?branch=main)](https://coveralls.io/github/pythological/etuples?branch=main) [![PyPI](https://img.shields.io/pypi/v/etuples)](https://pypi.org/project/etuples/)
 
 Python [S-expression](https://en.wikipedia.org/wiki/S-expression) emulation using tuple-like objects.
 
