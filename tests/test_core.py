@@ -8,7 +8,6 @@ from etuples.core import ExpressionTuple, InvalidExpression, KwdPair, etuple
 
 
 def test_ExpressionTuple(capsys):
-
     e0 = ExpressionTuple((add, 1, 2))
     assert hash(e0) == hash((add, 1, 2))
     assert e0 == ExpressionTuple(e0)
@@ -234,7 +233,6 @@ def gen_long_add_chain(N=None, num=1):
 
 
 def test_reify_recursion_limit():
-
     a = gen_long_add_chain(10)
     assert a.evaled_obj == 11
 

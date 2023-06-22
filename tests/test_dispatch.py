@@ -72,7 +72,6 @@ def test_rator_rands_apply():
 
 
 def test_etuplize():
-
     e0 = etuple(add, 1)
     e1 = etuplize(e0)
 

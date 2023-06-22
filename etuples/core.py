@@ -127,7 +127,6 @@ class ExpressionTuple(Sequence):
     null = object()
 
     def __new__(cls, seq=None, **kwargs):
-
         # XXX: This doesn't actually remove the entry from the kwargs
         # passed to __init__!
         # It does, however, remove it for the check below.
@@ -304,7 +303,6 @@ class ExpressionTuple(Sequence):
                     p.pretty(item)
 
     def __eq__(self, other):
-
         # Built-in `==` won't work in CPython for deeply nested structures.
 
         # TODO: We could track the level of `ExpressionTuple`-only nesting and
