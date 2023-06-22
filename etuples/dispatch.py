@@ -145,7 +145,6 @@ def etuplize(
         return_bad_args=return_bad_args,
         convert_ConsPairs=convert_ConsPairs,
     ):
-
         if isinstance(x, ExpressionTuple):
             yield x
             return
@@ -182,7 +181,6 @@ def etuplize(
             et_op = yield etuplize_step(op, return_bad_args=True)
             et_args = []
             for a in args:
-
                 e = yield etuplize_step(
                     a, return_bad_args=True, convert_ConsPairs=False
                 )
