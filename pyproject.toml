@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "versioneer[toml]==0.28"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "etuples"
+description = "Python S-expression emulation using tuple-like objects."
+authors = [
+    { name = "Brandon T. Willard", email = "brandonwillard+etuples@gmail.com" },
+]
+maintainers = [
+    { name = "Brandon T. Willard", email = "brandonwillard+etuples@gmail.com" },
+]
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = ["cons", "multipledispatch"]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "http://github.com/pythological/etuples"
+Repository = "http://github.com/pythological/etuples"
+"Bug Tracker" = "http://github.com/pythological/etuples/issues"
+
+[tool.setuptools]
+packages = ["etuples"]
+
+[tool.setuptools.package-data]
+etuples = ["py.typed"]
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "etuples/_version.py"
+versionfile_build = "etuples/_version.py"
+tag_prefix = "v"
+parentdir_prefix = "etuples-"
