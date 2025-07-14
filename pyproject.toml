@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "versioneer[toml]==0.28"]
+requires = ["setuptools>=80.0.0", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -19,7 +19,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
-
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
@@ -43,10 +42,6 @@ packages = ["etuples"]
 [tool.setuptools.package-data]
 etuples = ["py.typed"]
 
-[tool.versioneer]
-VCS = "git"
-style = "pep440"
-versionfile_source = "etuples/_version.py"
-versionfile_build = "etuples/_version.py"
-tag_prefix = "v"
-parentdir_prefix = "etuples-"
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "dirty-tag"

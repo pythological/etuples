@@ -1,10 +1,8 @@
 exclude: |
-    (?x)^(
-        versioneer\.py|
-        etuples/_version\.py|
-        doc/.*|
-        bin/.*
-    )$
+  (?x)^(
+      doc/.*|
+      bin/.*
+  )$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
@@ -32,10 +30,15 @@ repos:
           (?x)^(
               .*/?__init__\.py|
           )$
-        args: ['--in-place', '--remove-all-unused-imports', '--remove-unused-variable']
+        args:
+          [
+            "--in-place",
+            "--remove-all-unused-imports",
+            "--remove-unused-variable",
+          ]
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.4.0
     hooks:
       - id: mypy
         additional_dependencies:
-        - types-setuptools
+          - types-setuptools
