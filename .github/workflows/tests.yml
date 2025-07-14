@@ -22,7 +22,7 @@ jobs:
     outputs:
       changes: ${{ steps.changes.outputs.src }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: dorny/paths-filter@v2
@@ -37,9 +37,11 @@ jobs:
             - *python
             - '.github/**/*.yml'
             - 'setup.cfg'
+            - 'pyproject.toml'
             - 'requirements.txt'
             - '.coveragerc'
             - '.pre-commit-config.yaml'
+            - 'coverage.xml'
 
   style:
     name: Check code style
@@ -47,11 +49,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ needs.changes.outputs.changes == 'true' }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
-          python-version: 3.9
-      - uses: pre-commit/action@v2.0.0
+          python-version: 3.13
+      - uses: pre-commit/action@v3.0.0
 
   test:
     needs:
@@ -65,9 +67,10 @@ jobs:
           - 3.9
           - "3.10"
           - "3.11"
+          - "3.12"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -78,8 +81,9 @@ jobs:
         run: |
           pytest -v tests/ --cov=etuples --cov-report=xml:./coverage.xml
       - name: Coveralls
-        uses: AndreMiras/coveralls-python-action@develop
+        uses: coverallsapp/github-action@v2
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           flag-name: run-${{ matrix.python-version }}
 
@@ -100,6 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Coveralls Finished
-        uses: AndreMiras/coveralls-python-action@develop
+        uses: coverallsapp/github-action@v2
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
