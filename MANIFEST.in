@@ -1,0 +1,26 @@
+# Exclude entire directories
+prune .github
+prune .pytest_cache
+prune .tox
+prune .nox
+prune build
+prune dist
+prune .ropeproject
+prune .vscode
+prune .idea
+prune .venv
+prune venv
+prune env
+
+# Exclude file patterns
+global-exclude .DS_Store
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.so
+global-exclude .git*
+global-exclude .coverage
+global-exclude *.egg-info
+global-exclude *.swp
+global-exclude *.swo
+global-exclude *~
+global-exclude .env

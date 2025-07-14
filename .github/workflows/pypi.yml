@@ -18,25 +18,37 @@ concurrency:
 
 jobs:
   build:
-    name: Build source distribution
+    name: Build distributions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.9"
-      - name: Build the sdist
+      - name: Install build dependencies
         run: |
-          python setup.py sdist
+          python -m pip install --upgrade pip
+          python -m pip install build
+      - name: Build distributions
+        run: |
+          python -m build
       - name: Check the sdist installs and imports
         run: |
           mkdir -p test-sdist
           cd test-sdist
           python -m venv venv-sdist
           venv-sdist/bin/python -m pip install ../dist/etuples-*.tar.gz
-      - uses: actions/upload-artifact@v2
+          venv-sdist/bin/python -c "import etuples; print(etuples.__version__)"
+      - name: Check the wheel installs and imports
+        run: |
+          mkdir -p test-wheel
+          cd test-wheel
+          python -m venv venv-wheel
+          venv-wheel/bin/python -m pip install ../dist/etuples-*.whl
+          venv-wheel/bin/python -c "import etuples; print(etuples.__version__)"
+      - uses: actions/upload-artifact@v4
         with:
           name: artifact
           path: dist/*
@@ -47,11 +59,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && github.event.action == 'published'
     steps:
-      - uses: actions/download-artifact@v4.1.7
+      - uses: actions/download-artifact@v4
         with:
           name: artifact
           path: dist
-      - uses: pypa/gh-action-pypi-publish@master
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.pypi_secret }}
