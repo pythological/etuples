@@ -98,7 +98,7 @@ def test_etuple():
 
     e1_obj = e1.evaled_obj
     assert len(e1_obj) == 3
-    assert all(type(o) == object for o in e1_obj)
+    assert all(type(o) is object for o in e1_obj)
 
     # Make sure we don't re-create the cached `evaled_obj`
     e1_obj_2 = e1.evaled_obj
@@ -109,7 +109,7 @@ def test_etuple():
 
     # Make sure we didn't convert this single tuple value to
     # an `etuple`
-    assert type(e2[1]) == tuple
+    assert type(e2[1]) is tuple
 
     # Slices should be `etuple`s, though.
     assert isinstance(e2[:1], ExpressionTuple)
@@ -117,9 +117,9 @@ def test_etuple():
 
     e2_obj = e2.evaled_obj
 
-    assert type(e2_obj) == tuple
+    assert type(e2_obj) is tuple
     assert len(e2_obj) == 4
-    assert all(type(o) == object for o in e2_obj)
+    assert all(type(o) is object for o in e2_obj)
     # Make sure that it used `e1`'s original `evaled_obj`
     assert e2_obj[1:] == e1_obj
 

@@ -102,7 +102,7 @@ class KwdPair(object):
 
     def __eq__(self, other):
         return (
-            type(self) == type(other)
+            type(self) is type(other)
             and self.arg == other.arg
             and self.value == other.value
         )
@@ -132,7 +132,7 @@ class ExpressionTuple(Sequence):
         # It does, however, remove it for the check below.
         kwargs.pop("evaled_obj", None)
 
-        if seq is not None and not kwargs and type(seq) == cls:
+        if seq is not None and not kwargs and type(seq) is cls:
             return seq
 
         res = super().__new__(cls)

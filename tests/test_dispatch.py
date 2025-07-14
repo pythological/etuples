@@ -15,7 +15,7 @@ class Node:
 
     def __eq__(self, other):
         return (
-            type(self) == type(other)
+            type(self) is type(other)
             and self.rator == other.rator
             and self.rands == other.rands
         )
